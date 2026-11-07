@@ -38,6 +38,9 @@ protected:
   UPROPERTY(EditDefaultsOnly, Category = "Krastov|Input")
   TObjectPtr<UInputAction> FlashlightAction;
 
+  UPROPERTY(EditDefaultsOnly, Category = "Krastov|Input")
+  TObjectPtr<UInputAction> CrouchAction;
+
 private:
   void HandleMove(const FInputActionValue &Value);
   void HandleAimStick(const FInputActionValue &Value);
@@ -45,6 +48,7 @@ private:
   void HandleSprintCompleted();
   void HandleFlashlight();
   void AimAtCursor();
+  void HandleCrouch();
 
   bool bUsingGamepadAim = false;
 };

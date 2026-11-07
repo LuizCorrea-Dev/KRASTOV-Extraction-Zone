@@ -5,8 +5,15 @@
 #include "AbilitySystemComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SpotLightComponent.h"
+#include "DrawDebugHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Perception/AISense_Hearing.h"
+#include "TimerManager.h"
+
+namespace {
+constexpr float FootstepCheckInterval = 0.05f;
+}
 
 AOperatorCharacter::AOperatorCharacter() {
   PrimaryActorTick.bCanEverTick = false;
@@ -58,6 +65,7 @@ AOperatorCharacter::AOperatorCharacter() {
   Move->BrakingDecelerationWalking = 1400.f;
   Move->GroundFriction = 6.f;
   Move->AirControl = 0.05f;
+  Move->GetNavAgentPropertiesRef().bCanCrouch = true;
 
   JumpMaxCount = 1;
 }
@@ -87,6 +95,10 @@ void AOperatorCharacter::BeginPlay() {
       ->GetGameplayAttributeValueChangeDelegate(
           UKrastovAttributeSet::GetStaminaAttribute())
       .AddUObject(this, &AOperatorCharacter::HandleStaminaChanged);
+
+  GetWorldTimerManager().SetTimer(FootstepTimer, this,
+                                  &AOperatorCharacter::UpdateFootsteps,
+                                  FootstepCheckInterval, true);
 
   RecalculateMovement();
 }
@@ -132,6 +144,7 @@ void AOperatorCharacter::RecalculateMovement() {
   Move->MaxWalkSpeed =
       BaseWalkSpeed * Penalty * (bSprintActive ? SprintMultiplier : 1.f);
   Move->MaxAcceleration = BaseAcceleration * Penalty;
+  Move->MaxWalkSpeedCrouched = BaseWalkSpeed * Penalty * CrouchSpeedFactor;
   Move->RotationRate = FRotator(0.f,
                                 FMath::Lerp(MaxTurnRate, LoadedTurnRate,
                                             FMath::Clamp(LoadRatio, 0.f, 1.f)),
@@ -139,6 +152,9 @@ void AOperatorCharacter::RecalculateMovement() {
 }
 
 void AOperatorCharacter::SetSprinting(bool bNewWantsSprint) {
+  if (bNewWantsSprint && bIsCrouched) {
+    UnCrouch(); // correr levanta o Operador
+  }
   bWantsSprint = bNewWantsSprint;
   const bool bShouldDrain = bWantsSprint && !bExhausted;
 
@@ -200,4 +216,44 @@ void AOperatorCharacter::ToggleFlashlight() {
 
 bool AOperatorCharacter::IsFlashlightOn() const {
   return Flashlight && Flashlight->IsVisible();
+}
+
+void AOperatorCharacter::ToggleCrouch() {
+  if (bIsCrouched) {
+    UnCrouch();
+  } else {
+    SetSprinting(false);
+    Crouch();
+  }
+}
+
+void AOperatorCharacter::UpdateFootsteps() {
+  const UCharacterMovementComponent *Move = GetCharacterMovement();
+  const float Speed = GetVelocity().Size2D();
+
+  if (!Move->IsMovingOnGround() || Speed < 10.f) {
+    StrideAccumulator = 0.f;
+    return;
+  }
+
+  StrideAccumulator += Speed * FootstepCheckInterval;
+  if (StrideAccumulator < StrideLength) {
+    return;
+  }
+  StrideAccumulator = 0.f;
+
+  const bool bSprintActive = bWantsSprint && !bExhausted && !bIsCrouched;
+  const float NoiseRange =
+      bIsCrouched ? CrouchNoiseRange
+                  : (bSprintActive ? SprintNoiseRange : WalkNoiseRange);
+
+  UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.f, this,
+                                     NoiseRange, TEXT("Footstep"));
+
+  if (bDebugDrawNoise) {
+    DrawDebugSphere(GetWorld(), GetActorLocation(), NoiseRange, 16,
+                    FColor::Yellow, false, 0.4f);
+  }
+
+  OnFootstep(NoiseRange); // BP: som do passo
 }

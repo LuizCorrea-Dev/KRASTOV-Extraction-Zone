@@ -6,7 +6,6 @@
 #include "GameplayEffectTypes.h"
 #include "OperatorCharacter.generated.h"
 
-
 class UAbilitySystemComponent;
 class UKrastovAttributeSet;
 class USpotLightComponent;
@@ -37,6 +36,9 @@ public:
 
   UFUNCTION(BlueprintPure, Category = "Krastov|Movement")
   bool IsExhausted() const { return bExhausted; }
+
+  UFUNCTION(BlueprintCallable, Category = "Krastov|Movement")
+  void ToggleCrouch();
 
 protected:
   virtual void BeginPlay() override;
@@ -83,6 +85,27 @@ protected:
             meta = (ClampMin = "0.0", ClampMax = "1.0"))
   float ExhaustionRecoverRatio = 0.25f;
 
+  UPROPERTY(EditDefaultsOnly, Category = "Krastov|Movement",
+            meta = (ClampMin = "0.1", ClampMax = "1.0"))
+  float CrouchSpeedFactor = 0.45f;
+
+  // ---------- Ruído (ouvido pelos mutantes) ----------
+  UPROPERTY(EditDefaultsOnly, Category = "Krastov|Noise")
+  float CrouchNoiseRange = 250.f;
+  UPROPERTY(EditDefaultsOnly, Category = "Krastov|Noise")
+  float WalkNoiseRange = 900.f;
+  UPROPERTY(EditDefaultsOnly, Category = "Krastov|Noise")
+  float SprintNoiseRange = 2000.f;
+  /** Distância percorrida entre dois passos */
+  UPROPERTY(EditDefaultsOnly, Category = "Krastov|Noise")
+  float StrideLength = 120.f;
+  /** Desenha uma esfera amarela com o alcance de cada passo */
+  UPROPERTY(EditAnywhere, Category = "Krastov|Noise")
+  bool bDebugDrawNoise = false;
+
+  UFUNCTION(BlueprintImplementableEvent, Category = "Krastov")
+  void OnFootstep(float NoiseRange);
+
   // ---------- GAS (assets definidos no BP) ----------
   UPROPERTY(EditDefaultsOnly, Category = "Krastov|GAS")
   TArray<TSubclassOf<UGameplayEffect>> StartupEffects;
@@ -107,6 +130,10 @@ private:
   void StopSprintDrain();
   void HandleCarryWeightChanged(const FOnAttributeChangeData &Data);
   void HandleStaminaChanged(const FOnAttributeChangeData &Data);
+
+  void UpdateFootsteps();
+  FTimerHandle FootstepTimer;
+  float StrideAccumulator = 0.f;
 
   bool bWantsSprint = false;
   bool bExhausted = false;

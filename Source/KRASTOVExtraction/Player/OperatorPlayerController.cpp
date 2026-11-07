@@ -6,7 +6,6 @@
 #include "EnhancedInputSubsystems.h"
 #include "Player/OperatorCharacter.h"
 
-
 void AOperatorPlayerController::BeginPlay() {
   Super::BeginPlay();
 
@@ -47,6 +46,9 @@ void AOperatorPlayerController::SetupInputComponent() {
   if (FlashlightAction)
     EIC->BindAction(FlashlightAction, ETriggerEvent::Started, this,
                     &ThisClass::HandleFlashlight);
+  if (CrouchAction)
+    EIC->BindAction(CrouchAction, ETriggerEvent::Started, this,
+                    &ThisClass::HandleCrouch);
 }
 
 void AOperatorPlayerController::HandleMove(const FInputActionValue &Value) {
@@ -126,5 +128,11 @@ void AOperatorPlayerController::KrastovSetLoad(float Kg) {
       ASC->SetNumericAttributeBase(
           UKrastovAttributeSet::GetCarryWeightAttribute(), Kg);
     }
+  }
+}
+
+void AOperatorPlayerController::HandleCrouch() {
+  if (AOperatorCharacter *Operator = GetPawn<AOperatorCharacter>()) {
+    Operator->ToggleCrouch();
   }
 }

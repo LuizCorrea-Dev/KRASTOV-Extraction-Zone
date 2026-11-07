@@ -1,19 +1,24 @@
-KRASTOVExtraction: setup completo da Etapa 1 (UE 5.8.4)
+# KRASTOVExtraction: Setup Completo da Etapa 1 (UE 5.8.4)
+
 Com o nome do projeto definido, ficam fixos:
 
-Módulo: KRASTOVExtraction
-Macro de exportação: KRASTOVEXTRACTION_API
-Arquivo de build: Source/KRASTOVExtraction/KRASTOVExtraction.Build.cs
+- **Módulo:** `KRASTOVExtraction`
+- **Macro de exportação:** `KRASTOVEXTRACTION_API`
+- **Arquivo de build:** `Source/KRASTOVExtraction/KRASTOVExtraction.Build.cs`
 
-Para não conflitar com as classes que o template gera (KRASTOVExtractionCharacter etc.), as classes do jogo se chamam AOperatorCharacter e AOperatorPlayerController. O código abaixo assume single-player.
-1. Antes de escrever código (editor aberto)
+Para não conflitar com as classes que o template gera (`KRASTOVExtractionCharacter` etc.), as classes do jogo se chamam `AOperatorCharacter` e `AOperatorPlayerController`. O código abaixo assume single-player.
 
-Edit > Plugins: ative Gameplay Abilities, StateTree, Gameplay StateTree e Procedural Content Generation Framework. Reinicie o editor. O Twin Stick talvez já tenha ativado alguns deles.
-Desative o Live Coding: clique nos três pontos ao lado de Compile e desmarque Enable Live Coding.
-Feche o editor.
+## 1. Antes de escrever código (editor aberto)
 
-2. Arquivos no disco
+1. **Edit > Plugins:** ative `Gameplay Abilities`, `StateTree`, `Gameplay StateTree` e `Procedural Content Generation Framework`. Reinicie o editor. O Twin Stick talvez já tenha ativado alguns deles.
+2. **Desative o Live Coding:** clique nos três pontos ao lado de *Compile* e desmarque *Enable Live Coding*.
+3. **Feche o editor.**
+
+## 2. Arquivos no disco
+
 Crie as pastas e os arquivos vazios pelo Windows Explorer. É mais previsível que o wizard para controlar as subpastas.
+
+```text
 Source/KRASTOVExtraction/
 ├── KRASTOVExtraction.Build.cs      (já existe, editar)
 ├── Abilities/
@@ -26,9 +31,16 @@ Source/KRASTOVExtraction/
     ├── OperatorCharacter.cpp
     ├── OperatorPlayerController.h
     └── OperatorPlayerController.cpp
-Não apague nem renomeie os arquivos que o template criou. Os Blueprints dele dependem desses arquivos.
-2.1 KRASTOVExtraction.Build.cs
+```
+
+> [!IMPORTANT]
+> Não apague nem renomeie os arquivos que o template criou. Os Blueprints dele dependem desses arquivos.
+
+### 2.1 `KRASTOVExtraction.Build.cs`
+
 Mantenha o que já existe e garanta estas linhas:
+
+```csharp
 // Dentro do construtor, junto ao que o template já tem:
 PublicIncludePaths.Add(ModuleDirectory);
 
@@ -37,8 +49,13 @@ PublicDependencyModuleNames.AddRange(new string[] {
     "EnhancedInput", "GameplayAbilities", "GameplayTags", "GameplayTasks",
     "AIModule", "NavigationSystem", "UMG"
 });
-Se o template já listar algum desses módulos, não tem problema repetir. Se já houver um PublicIncludePaths.AddRange(...), mantenha e só acrescente a linha do ModuleDirectory.
-2.2 Abilities/KrastovTags.h
+```
+
+Se o template já listar algum desses módulos, não tem problema repetir. Se já houver um `PublicIncludePaths.AddRange(...)`, mantenha e só acrescente a linha do `ModuleDirectory`.
+
+### 2.2 `Abilities/KrastovTags.h`
+
+```cpp
 #pragma once
 
 #include "NativeGameplayTags.h"
@@ -49,7 +66,11 @@ namespace KrastovTags
 	KRASTOVEXTRACTION_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_Exhausted);
 	KRASTOVEXTRACTION_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(State_FlashlightOn);
 }
-2.3 Abilities/KrastovTags.cpp
+```
+
+### 2.3 `Abilities/KrastovTags.cpp`
+
+```cpp
 #include "Abilities/KrastovTags.h"
 
 namespace KrastovTags
@@ -58,7 +79,11 @@ namespace KrastovTags
 	UE_DEFINE_GAMEPLAY_TAG(State_Exhausted,    "State.Exhausted");
 	UE_DEFINE_GAMEPLAY_TAG(State_FlashlightOn, "State.FlashlightOn");
 }
-2.4 Abilities/KrastovAttributeSet.h
+```
+
+### 2.4 `Abilities/KrastovAttributeSet.h`
+
+```cpp
 #pragma once
 
 #include "CoreMinimal.h"
@@ -116,7 +141,11 @@ public:
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
 };
-2.5 Abilities/KrastovAttributeSet.cpp
+```
+
+### 2.5 `Abilities/KrastovAttributeSet.cpp`
+
+```cpp
 #include "Abilities/KrastovAttributeSet.h"
 #include "GameplayEffectExtension.h"
 
@@ -172,7 +201,11 @@ void UKrastovAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCal
 		SetRadiation(FMath::Clamp(GetRadiation(), 0.f, 1000.f));
 	}
 }
-2.6 Player/OperatorCharacter.h
+```
+
+### 2.6 `Player/OperatorCharacter.h`
+
+```cpp
 #pragma once
 
 #include "CoreMinimal.h"
@@ -282,7 +315,11 @@ private:
 	bool bExhausted = false;
 	FActiveGameplayEffectHandle SprintDrainHandle;
 };
-2.7 Player/OperatorCharacter.cpp
+```
+
+### 2.7 `Player/OperatorCharacter.cpp`
+
+```cpp
 #include "Player/OperatorCharacter.h"
 
 #include "Abilities/KrastovAttributeSet.h"
@@ -490,7 +527,11 @@ bool AOperatorCharacter::IsFlashlightOn() const
 {
 	return Flashlight && Flashlight->IsVisible();
 }
-2.8 Player/OperatorPlayerController.h
+```
+
+### 2.8 `Player/OperatorPlayerController.h`
+
+```cpp
 #pragma once
 
 #include "CoreMinimal.h"
@@ -541,7 +582,11 @@ private:
 
 	bool bUsingGamepadAim = false;
 };
-2.9 Player/OperatorPlayerController.cpp
+```
+
+### 2.9 `Player/OperatorPlayerController.cpp`
+
+```cpp
 #include "Player/OperatorPlayerController.h"
 
 #include "Player/OperatorCharacter.h"
@@ -682,80 +727,94 @@ void AOperatorPlayerController::KrastovSetLoad(float Kg)
 		}
 	}
 }
-3. Compilar
+```
 
-Clique com o botão direito em KRASTOVExtraction.uproject e use Generate Visual Studio project files.
-Abra o .sln e selecione Development Editor / Win64.
-Clique com o botão direito em Games > KRASTOVExtraction e use Build.
-Abra o editor pelo .uproject ou com F5 no VS. Você deve ver C++ Classes/KRASTOVExtraction/Player e Abilities.
+## 3. Compilar
+
+1. Clique com o botão direito em `KRASTOVExtraction.uproject` e use **Generate Visual Studio project files**.
+2. Abra o `.sln` e selecione **Development Editor / Win64**.
+3. Clique com o botão direito em **Games > KRASTOVExtraction** e use **Build**.
+4. Abra o editor pelo `.uproject` ou com `F5` no VS. Você deve ver `C++ Classes/KRASTOVExtraction/Player` e `Abilities`.
 
 Se der erro, cole aqui o primeiro erro da janela Output. Ele costuma ser a causa dos outros.
-4. Assets no editor
-4.1 Input (Content/Krastov/Input/)
 
-      
-        
-        AssetTipo de valor
-        IA_MoveAxis2DIA_AimStickAxis2DIA_SprintDigital (bool)IA_FlashlightDigital (bool)
-        
-      
-    Mapeamentos do IMC_Zone:
+## 4. Assets no editor
 
-      
-        
-        AçãoTeclaModifiers
-        IA_MoveWSwizzle Input Axis Values (YXZ)IA_MoveSSwizzle (YXZ) + NegateIA_MoveANegateIA_MoveD(nenhum)IA_MoveGamepad Left Thumbstick 2D-AxisDead ZoneIA_AimStickGamepad Right Thumbstick 2D-AxisDead ZoneIA_SprintLeft Shift / Gamepad Left Thumbstick Button(nenhum)IA_FlashlightF / Gamepad D-pad Up(nenhum)
-        
-      
-    4.2 Gameplay Effects (Content/Krastov/Abilities/Effects/)
-Crie cada um com o botão direito em Blueprint Class, parent GameplayEffect.
-GE_StaminaRegen
+### 4.1 Input (`Content/Krastov/Input/`)
 
-Duration Policy: Infinite. Period: 0.1.
-Modifier: KrastovAttributeSet.Stamina, Add, 1.5, o que dá cerca de 15/s.
-Em Components, adicione Target Tag Requirements. Em Ongoing Tag Requirements > Ignore Tags, coloque State.Sprinting. A regeneração pausa enquanto o Operador corre.
+| Asset | Tipo de valor |
+| :--- | :--- |
+| `IA_Move` | `Axis2D` |
+| `IA_AimStick` | `Axis2D` |
+| `IA_Sprint` | `Digital (bool)` |
+| `IA_Flashlight` | `Digital (bool)` |
 
-GE_SprintDrain
+**Mapeamentos do `IMC_Zone`:**
 
-Duration Policy: Infinite. Period: 0.1.
-Modifier: KrastovAttributeSet.Stamina, Add, -2.0, o que dá cerca de 20/s.
+| Ação | Tecla | Modifiers |
+| :--- | :--- | :--- |
+| `IA_Move` | `W` | Swizzle Input Axis Values (YXZ) |
+| `IA_Move` | `S` | Swizzle (YXZ) + Negate |
+| `IA_Move` | `A` | Negate |
+| `IA_Move` | `D` | *(nenhum)* |
+| `IA_Move` | `Gamepad Left Thumbstick 2D-Axis` | Dead Zone |
+| `IA_AimStick` | `Gamepad Right Thumbstick 2D-Axis` | Dead Zone |
+| `IA_Sprint` | `Left Shift` / `Gamepad Left Thumbstick Button` | *(nenhum)* |
+| `IA_Flashlight` | `F` / `Gamepad D-pad Up` | *(nenhum)* |
 
-4.3 Blueprints (Content/Krastov/Blueprints/)
-BP_Operator: botão direito em OperatorCharacter, Create Blueprint class based on...
+### 4.2 Gameplay Effects (`Content/Krastov/Abilities/Effects/`)
 
-Mesh: escolha o mesh do Manny em Characters/Mannequins/Meshes. Use Location Z -90 e Rotation Yaw -90.
-Anim Class: o AnimBP do template, que fica em Characters/Mannequins/Anims.
-Startup Effects: GE_StaminaRegen. Sprint Drain Effect: GE_SprintDrain.
-No Event Graph, implemente OnFlashlightToggled com um som de clique e OnExhausted com respiração ofegante. Um Print String serve no começo.
+Crie cada um com o botão direito em **Blueprint Class**, parent `GameplayEffect`.
 
-BP_OperatorPC: baseado em OperatorPlayerController. Atribua IMC_Zone e as quatro IAs.
-GM_Zone: parent GameModeBase. Use Default Pawn Class = BP_Operator e Player Controller Class = BP_OperatorPC.
-4.4 Mapa de teste
+- **`GE_StaminaRegen`**
+  - **Duration Policy:** `Infinite`. **Period:** `0.1`.
+  - **Modifier:** `KrastovAttributeSet.Stamina`, `Add`, `1.5`, o que dá cerca de 15/s.
+  - Em **Components**, adicione **Target Tag Requirements**. Em **Ongoing Tag Requirements > Ignore Tags**, coloque `State.Sprinting`. A regeneração pausa enquanto o Operador corre.
+- **`GE_SprintDrain`**
+  - **Duration Policy:** `Infinite`. **Period:** `0.1`.
+  - **Modifier:** `KrastovAttributeSet.Stamina`, `Add`, `-2.0`, o que dá cerca de 20/s.
 
-Crie Content/Krastov/Maps/L_Sandbox_Movement. Pode duplicar o mapa do template.
-Em World Settings > GameMode Override, selecione GM_Zone.
-Diminua bastante a intensidade da Directional Light e do Sky Light para testar a lanterna no escuro.
+### 4.3 Blueprints (`Content/Krastov/Blueprints/`)
 
-5. Testar
+- **`BP_Operator`:** botão direito em `OperatorCharacter`, *Create Blueprint class based on...*
+  - **Mesh:** escolha o mesh do Manny em `Characters/Mannequins/Meshes`. Use Location Z `-90` e Rotation Yaw `-90`.
+  - **Anim Class:** o AnimBP do template, que fica em `Characters/Mannequins/Anims`.
+  - **Startup Effects:** `GE_StaminaRegen`. **Sprint Drain Effect:** `GE_SprintDrain`.
+  - No **Event Graph**, implemente `OnFlashlightToggled` com um som de clique e `OnExhausted` com respiração ofegante. Um *Print String* serve no começo.
+- **`BP_OperatorPC`:** baseado em `OperatorPlayerController`. Atribua `IMC_Zone` e as quatro IAs.
+- **`GM_Zone`:** parent `GameModeBase`. Use `Default Pawn Class = BP_Operator` e `Player Controller Class = BP_OperatorPC`.
 
-      
-        
-        TesteComo
-        Movimento e miraWASD + mouse, depois gamepad. O personagem deve girar com atraso perceptível.Sprint e exaustãoSegure Shift até a estamina zerar. O sprint só volta com 25% de estamina.Atributos e tagsNo console (~): showdebug abilitysystemPesoConsole: KrastovSetLoad 30, depois KrastovSetLoad 42. Com 35 kg máximos, a velocidade e o giro caem a partir de 17,5 kg.LanternaTecla F. A tag State.FlashlightOn deve aparecer no showdebug.
-        
-      
-    Quando isso estiver funcionando, seguimos para a Etapa 2 (gerador procedural com Seed). Se algo falhar na compilação ou no teste, mande o erro ou descreva o comportamento.
+### 4.4 Mapa de teste
 
+1. Crie `Content/Krastov/Maps/L_Sandbox_Movement`. Pode duplicar o mapa do template.
+2. Em **World Settings > GameMode Override**, selecione `GM_Zone`.
+3. Diminua bastante a intensidade da *Directional Light* e do *Sky Light* para testar a lanterna no escuro.
 
+## 5. Testar
 
-	Etapa 2: gerador procedural da Zona
-O texto que você colou é o setup do projeto, que já está feito (na 5.8, como KRASTOVExtraction). A Etapa 2 do roadmap é o Gerador Procedural de Terreno e Labirinto da Zona. Antes de começar, confira três itens daquele setup que talvez tenham ficado pendentes:
+| Teste | Como |
+| :--- | :--- |
+| **Movimento e mira** | WASD + mouse, depois gamepad. O personagem deve girar com atraso perceptível. |
+| **Sprint e exaustão** | Segure `Shift` até a estamina zerar. O sprint só volta com 25% de estamina. |
+| **Atributos e tags** | No console (`~`): `showdebug abilitysystem` |
+| **Peso** | Console: `KrastovSetLoad 30`, depois `KrastovSetLoad 42`. Com 35 kg máximos, a velocidade e o giro caem a partir de 17,5 kg. |
+| **Lanterna** | Tecla `F`. A tag `State.FlashlightOn` deve aparecer no `showdebug`. |
 
- Project Settings > Rendering: Allow Static Lighting desmarcado e Generate Mesh Distance Fields ligado.
- Git + LFS configurado, com um commit da Etapa 1 funcionando. Assim, se algo quebrar agora, você volta para um estado bom.
- Live Coding desligado.
+Quando isso estiver funcionando, seguimos para a Etapa 2 (gerador procedural com Seed). Se algo falhar na compilação ou no teste, mande o erro ou descreva o comportamento.
 
-1. Como o gerador funciona
+---
+
+# Etapa 2: Gerador Procedural da Zona
+
+O texto que você colou é o setup do projeto, que já está feito (na 5.8, como `KRASTOVExtraction`). A Etapa 2 do roadmap é o Gerador Procedural de Terreno e Labirinto da Zona. Antes de começar, confira três itens daquele setup que talvez tenham ficado pendentes:
+
+- [ ] **Project Settings > Rendering:** *Allow Static Lighting* desmarcado e *Generate Mesh Distance Fields* ligado.
+- [ ] **Git + LFS** configurado, com um commit da Etapa 1 funcionando. Assim, se algo quebrar agora, você volta para um estado bom.
+- [ ] **Live Coding** desligado.
+
+## 1. Como o gerador funciona
+
+```text
 Seed ──► FRandomStream (determinístico: mesma Seed = mesmo mapa)
            │
            ├─ 1. Labirinto perfeito (DFS)     → todas as células conectadas
@@ -765,23 +824,35 @@ Seed ──► FRandomStream (determinístico: mesma Seed = mesmo mapa)
            ├─ 5. Extração = célula mais distante do Spawn
            ├─ 6. Zona segura = células a até N passos do Spawn
            └─ 7. Bitmask N/L/S/O → tipo de peça + rotação → instâncias (ISM)
-Por que fazer em C++ e não em PCG: a lógica de conectividade (labirinto, caminho garantido, distâncias) é um algoritmo de grafo, que fica mais simples e confiável em código. O PCG entra depois, para decorar as células já geradas com entulho, tubulações, poças e luzes quebradas.
+```
+
+**Por que fazer em C++ e não em PCG:** a lógica de conectividade (labirinto, caminho garantido, distâncias) é um algoritmo de grafo, que fica mais simples e confiável em código. O PCG entra depois, para decorar as células já geradas com entulho, tubulações, poças e luzes quebradas.
+
 O bitmask guarda as aberturas de cada célula:
 
-      
-        
-        BitValorDireção (câmera top-down)
-        01+X (cima na tela)12+Y (direita)24-X (baixo)38-Y (esquerda)
-        
-      
-    A partir da máscara, o gerador calcula o tipo de peça (beco, reta, curva, T, cruz) e a rotação em múltiplos de 90°. Por enquanto as paredes são cubos (greybox). Quando chegar o kit modular de bunker, esse dado já diz qual peça usar e como girá-la.
-2. Arquivos
+| Bit | Valor | Direção (câmera top-down) |
+| :--- | :--- | :--- |
+| `0` | `1` | `+X` (cima na tela) |
+| `1` | `2` | `+Y` (direita) |
+| `2` | `4` | `-X` (baixo) |
+| `3` | `8` | `-Y` (esquerda) |
+
+A partir da máscara, o gerador calcula o tipo de peça (beco, reta, curva, T, cruz) e a rotação em múltiplos de 90°. Por enquanto as paredes são cubos (greybox). Quando chegar o kit modular de bunker, esse dado já diz qual peça usar e como girá-la.
+
+## 2. Arquivos
+
+```text
 Source/KRASTOVExtraction/Zone/
 ├── ZoneTypes.h
 ├── ZoneGenerator.h
 └── ZoneGenerator.cpp
-Não é preciso mudar o Build.cs. Tudo usa o módulo Engine.
-2.1 Zone/ZoneTypes.h
+```
+
+Não é preciso mudar o `Build.cs`. Tudo usa o módulo `Engine`.
+
+### 2.1 `Zone/ZoneTypes.h`
+
+```cpp
 #pragma once
 
 #include "CoreMinimal.h"
@@ -821,7 +892,11 @@ struct FZoneCell
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly) EZoneTileType TileType = EZoneTileType::Solid;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly) float TileYaw = 0.f;
 };
-2.2 Zone/ZoneGenerator.h
+```
+
+### 2.2 `Zone/ZoneGenerator.h`
+
+```cpp
 #pragma once
 
 #include "CoreMinimal.h"
@@ -945,7 +1020,11 @@ private:
 	UPROPERTY(VisibleInstanceOnly, Category = "Krastov|Zone|Debug") int32 ReachableCells = 0;
 	UPROPERTY(VisibleInstanceOnly, AdvancedDisplay, Category = "Krastov|Zone|Debug") TArray<FZoneCell> Cells;
 };
-2.3 Zone/ZoneGenerator.cpp
+```
+
+### 2.3 `Zone/ZoneGenerator.cpp`
+
+```cpp
 #include "Zone/ZoneGenerator.h"
 
 #include "Components/InstancedStaticMeshComponent.h"
@@ -1338,52 +1417,1003 @@ void AZoneGenerator::TeleportPlayer()
 		Pawn->TeleportTo(GetSpawnLocation() + FVector(0.f, 0.f, 120.f), Pawn->GetActorRotation());
 	}
 }
-3. Compilar
+```
 
-Feche o editor.
-Clique com o botão direito no .uproject e use Generate Visual Studio project files.
-No VS, use Build com Development Editor.
-Abra o editor.
+## 3. Compilar
 
-4. Montar o mapa de teste
-4.1 Blueprint do gerador
+1. Feche o editor.
+2. Clique com o botão direito no `.uproject` e use **Generate Visual Studio project files**.
+3. No VS, use **Build** com **Development Editor**.
+4. Abra o editor.
 
-Crie a pasta Content/Krastov/Blueprints/Zone.
-Em C++ Classes > KRASTOVExtraction > Zone, clique com o botão direito em ZoneGenerator, use Create Blueprint class based on... e dê o nome BP_ZoneGenerator.
-Opcional: em FloorInstances e WallInstances, troque o material por um cinza escuro.
-Opcional: no Event Graph, use Event On Zone Generated para colocar um Point Light verde fraco na Extraction Location. Isso já serve de teste da iluminação diegética.
+## 4. Montar o mapa de teste
 
-O mesh precisa ter o pivô no centro, como o cubo da engine. Meshes com pivô na base ficam deslocados.
-4.2 Mapa
+### 4.1 Blueprint do gerador
 
-Use File > New Level > Empty Level e salve como Content/Krastov/Maps/L_Zone_Test.
-Arraste o BP_ZoneGenerator para a viewport e deixe a Location em 0, 0, 0.
-No Details, na categoria Krastov|Zone, clique no botão Generate. O labirinto aparece no editor.
-Mude a Seed e clique de novo: o layout muda.
-Volte para a Seed anterior: o layout idêntico volta. Esse é o teste de determinismo.
+1. Crie a pasta `Content/Krastov/Blueprints/Zone`.
+2. Em **C++ Classes > KRASTOVExtraction > Zone**, clique com o botão direito em `ZoneGenerator`, use *Create Blueprint class based on...* e dê o nome `BP_ZoneGenerator`.
+3. **Opcional:** em `FloorInstances` e `WallInstances`, troque o material por um cinza escuro.
+4. **Opcional:** no **Event Graph**, use `Event On Zone Generated` para colocar um *Point Light* verde fraco na `Extraction Location`. Isso já serve de teste da iluminação diegética.
 
-Adicione um Player Start em qualquer lugar. O gerador teleporta o Operador para o spawn.
-Adicione o Post Process Volume com Infinite Extent e EV100 fixo, como no mapa escuro anterior.
-Em World Settings > GameMode Override, selecione GM_Zone.
+> [!NOTE]
+> O mesh precisa ter o pivô no centro, como o cubo da engine. Meshes com pivô na base ficam deslocados.
 
-4.3 NavMesh (base para a IA da Etapa 3)
+### 4.2 Mapa
 
-Abra Project Settings > Navigation Mesh > Runtime e mude Runtime Generation para Dynamic. Isso é necessário porque as paredes são criadas durante o jogo.
-Clique no botão + e escolha Volumes > Nav Mesh Bounds Volume. Posicione o volume cobrindo a grade: com 12x12 células de 800, a área vai de 0 a 9600 em X e Y. Por exemplo, Location 4800, 4800, 0 e Scale 50, 50, 5.
-Pressione P na viewport. A área verde deve cobrir os corredores, sem atravessar paredes.
+1. Use **File > New Level > Empty Level** e salve como `Content/Krastov/Maps/L_Zone_Test`.
+2. Arraste o `BP_ZoneGenerator` para a viewport e deixe a Location em `0, 0, 0`.
+3. No **Details**, na categoria `Krastov|Zone`, clique no botão **Generate**. O labirinto aparece no editor.
+4. Mude a `Seed` e clique de novo: o layout muda.
+5. Volte para a `Seed` anterior: o layout idêntico volta. Esse é o teste de determinismo.
+6. Adicione um **Player Start** em qualquer lugar. O gerador teleporta o Operador para o spawn.
+7. Adicione o **Post Process Volume** com *Infinite Extent* e *EV100* fixo, como no mapa escuro anterior.
+8. Em **World Settings > GameMode Override**, selecione `GM_Zone`.
 
-5. Checklist da Etapa 2
+### 4.3 NavMesh (base para a IA da Etapa 3)
 
- Botão Generate cria o labirinto no editor
- Mesma Seed gera o mesmo layout
- Output Log (Window > Output Log) mostra Alcancaveis=144/144
- No Play, o Operador aparece na célula de spawn, na borda inferior da tela
- A luz verde (se você fez o passo opcional) fica no ponto mais distante
- A NavMesh (tecla P) cobre os corredores
+1. Abra **Project Settings > Navigation Mesh > Runtime** e mude *Runtime Generation* para `Dynamic`. Isso é necessário porque as paredes são criadas durante o jogo.
+2. Clique no botão `+` e escolha **Volumes > Nav Mesh Bounds Volume**. Posicione o volume cobrindo a grade: com `12x12` células de `800`, a área vai de `0` a `9600` em X e Y. Por exemplo, Location `4800, 4800, 0` e Scale `50, 50, 5`.
+3. Pressione `P` na viewport. A área verde deve cobrir os corredores, sem atravessar paredes.
 
-Próximos passos
+## 5. Checklist da Etapa 2
 
-Etapa 2b (opcional): um grafo PCG que lê as células e espalha entulho e tubulações, além de luzes quebradas ocasionais nas salas.
-Etapa 3: o mutante, com AIPerception (cone de 90° com Line-of-Sight e audição) e StateTree, usando IsLocationInSafeArea para nunca nascer perto do spawn.
+- [ ] Botão **Generate** cria o labirinto no editor
+- [ ] Mesma `Seed` gera o mesmo layout
+- [ ] **Output Log** (**Window > Output Log**) mostra `Alcancaveis=144/144`
+- [ ] No Play, o Operador aparece na célula de spawn, na borda inferior da tela
+- [ ] A luz verde (se você fez o passo opcional) fica no ponto mais distante
+- [ ] A NavMesh (tecla `P`) cobre os corredores
+
+### Próximos passos
+
+- **Etapa 2b (opcional):** um grafo PCG que lê as células e espalha entulho e tubulações, além de luzes quebradas ocasionais nas salas.
+- **Etapa 3:** o mutante, com `AIPerception` (cone de 90° com Line-of-Sight e audição) e `StateTree`, usando `IsLocationInSafeArea` para nunca nascer perto do spawn.
 
 Se o build falhar, cole aqui o primeiro erro. Se algo no layout parecer estranho, como parede faltando, sala isolada ou chão deslocado, mande uma descrição ou um print da viewport.
+
+---
+
+# Etapa 3: O Mutante (IA com Visão, Audição e Estados)
+
+## Mudança em relação à prévia
+
+Na prévia indiquei `StateTree`. Nesta primeira versão, a máquina de estados fica em C++, dentro do `AIController`. Motivos:
+
+- Com 4 estados, um FSM em código é pequeno, fácil de depurar e não exige montar um asset complexo no editor. Foi no editor que surgiram a maioria dos tropeços até aqui.
+- Os quatro estados (*Patrulha*, *Investigação*, *Perseguição*, *Ataque*) e as regras ficam idênticos ao planejado.
+- Quando o mutante ganhar comportamentos mais ricos (fugir, chamar outros, emboscar), migramos para `StateTree` com a lógica já validada.
+
+## 1. Como funciona
+
+```text
+Operador ──passos──► ReportNoiseEvent (alcance: agachado 2,5 m | andando 9 m | correndo 20 m)
+   │                        │
+   │ (corpo visível)        ▼
+   ▼               AMutantAIController (AIPerception)
+ Visão: cone 90° + Line-of-Sight (paredes bloqueiam)
+   • lanterna APAGADA → só vê até 10 m
+   • lanterna ACESA   → vê até 24 m
+                            │
+                            ▼
+      ┌─────────── FSM ───────────┐
+      │ PATROL ──ouviu──► INVESTIGATE ──nada──► PATROL
+      │   │                  │
+      │   └──viu──► CHASE ◄──┘ viu
+      │               │  perdeu de vista >2 s → INVESTIGATE (último local)
+      │               ▼ perto
+      │            ATTACK ──► GE_MutantHit (-20 de vida no Operador)
+      └───────────────────────────┘
+```
+
+## 2. Arquivos
+
+Novos (crie pelo Explorer, como antes):
+
+```text
+Source/KRASTOVExtraction/AI/
+├── MutantCharacter.h
+├── MutantCharacter.cpp
+├── MutantAIController.h
+└── MutantAIController.cpp
+```
+
+Alterados: `OperatorCharacter.h/.cpp`, `OperatorPlayerController.h/.cpp` e `ZoneGenerator.h/.cpp`.
+O `Build.cs` já tem `AIModule` e `NavigationSystem`, então não precisa mudar nada.
+
+### 2.1 `AI/MutantCharacter.h`
+
+```cpp
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Character.h"
+#include "AbilitySystemInterface.h"
+#include "MutantCharacter.generated.h"
+
+class UAbilitySystemComponent;
+class UKrastovAttributeSet;
+class UGameplayEffect;
+
+UENUM(BlueprintType)
+enum class EMutantState : uint8
+{
+	Patrol,
+	Investigate,
+	Chase,
+	Attack
+};
+
+UCLASS()
+class KRASTOVEXTRACTION_API AMutantCharacter : public ACharacter, public IAbilitySystemInterface
+{
+	GENERATED_BODY()
+
+public:
+	AMutantCharacter();
+
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	/** Retorna true se o ataque aconteceu (respeita o cooldown) */
+	bool TryAttack(AActor* Target);
+
+	void NotifyAIStateChanged(EMutantState NewState) { OnAIStateChanged(NewState); }
+
+protected:
+	virtual void BeginPlay() override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "GAS")
+	TObjectPtr<UAbilitySystemComponent> AbilitySystem;
+
+	UPROPERTY()
+	TObjectPtr<UKrastovAttributeSet> Attributes;
+
+	/** GE aplicado no alvo a cada golpe (ex.: GE_MutantHit) */
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|Combat")
+	TSubclassOf<UGameplayEffect> AttackEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|Combat", meta = (ClampMin = "0.1"))
+	float AttackCooldown = 1.2f;
+
+	// ---------- Ganchos para o Blueprint ----------
+	UFUNCTION(BlueprintImplementableEvent, Category = "Krastov")
+	void OnAttack(AActor* Target);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Krastov")
+	void OnAIStateChanged(EMutantState NewState);
+
+private:
+	float NextAttackTime = 0.f;
+};
+```
+
+### 2.2 `AI/MutantCharacter.cpp`
+
+```cpp
+#include "AI/MutantCharacter.h"
+
+#include "AI/MutantAIController.h"
+#include "Abilities/KrastovAttributeSet.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemGlobals.h"
+#include "GameFramework/CharacterMovementComponent.h"
+
+AMutantCharacter::AMutantCharacter()
+{
+	PrimaryActorTick.bCanEverTick = false;
+
+	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
+	Attributes    = CreateDefaultSubobject<UKrastovAttributeSet>(TEXT("Attributes"));
+
+	// Possuído automaticamente pelo controlador do mutante (no mapa ou quando spawnado)
+	AIControllerClass = AMutantAIController::StaticClass();
+	AutoPossessAI     = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	bUseControllerRotationYaw = false;
+	UCharacterMovementComponent* Move = GetCharacterMovement();
+	Move->bOrientRotationToMovement = true;
+	Move->RotationRate = FRotator(0.f, 300.f, 0.f);
+	Move->MaxWalkSpeed = 150.f;
+}
+
+UAbilitySystemComponent* AMutantCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystem;
+}
+
+void AMutantCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	AbilitySystem->InitAbilityActorInfo(this, this);
+}
+
+bool AMutantCharacter::TryAttack(AActor* Target)
+{
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (!Target || Now < NextAttackTime)
+	{
+		return false;
+	}
+	NextAttackTime = Now + AttackCooldown;
+
+	OnAttack(Target); // BP: animação, som, VFX
+
+	if (AttackEffect)
+	{
+		if (UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Target))
+		{
+			FGameplayEffectContextHandle Context = AbilitySystem->MakeEffectContext();
+			Context.AddSourceObject(this);
+			const FGameplayEffectSpecHandle Spec = AbilitySystem->MakeOutgoingSpec(AttackEffect, 1.f, Context);
+			if (Spec.IsValid())
+			{
+				AbilitySystem->ApplyGameplayEffectSpecToTarget(*Spec.Data.Get(), TargetASC);
+			}
+		}
+	}
+	return true;
+}
+```
+
+### 2.3 `AI/MutantAIController.h`
+
+```cpp
+#pragma once
+
+#include "CoreMinimal.h"
+#include "AIController.h"
+#include "Perception/AIPerceptionTypes.h"
+#include "AI/MutantCharacter.h"
+#include "MutantAIController.generated.h"
+
+class UAIPerceptionComponent;
+class UAISenseConfig_Sight;
+class UAISenseConfig_Hearing;
+class AOperatorCharacter;
+
+UCLASS()
+class KRASTOVEXTRACTION_API AMutantAIController : public AAIController
+{
+	GENERATED_BODY()
+
+public:
+	AMutantAIController();
+
+	UFUNCTION(BlueprintPure, Category = "Krastov|AI")
+	EMutantState GetMutantState() const { return State; }
+
+protected:
+	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnUnPossess() override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Krastov|AI")
+	TObjectPtr<UAIPerceptionComponent> Perception;
+
+	UPROPERTY()
+	TObjectPtr<UAISenseConfig_Sight> SightConfig;
+
+	UPROPERTY()
+	TObjectPtr<UAISenseConfig_Hearing> HearingConfig;
+
+	// ---------- Percepção ----------
+	/** Até onde enxerga um Operador com a lanterna APAGADA */
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Perception")
+	float DarkSightRange = 1000.f;
+
+	/** Até onde enxerga um Operador com a lanterna ACESA (também é o raio do sensor) */
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Perception")
+	float FlashlightSightRange = 2400.f;
+
+	/** Meio-ângulo do cone de visão (45 = cone total de 90°) */
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Perception", meta = (ClampMin = "5", ClampMax = "180"))
+	float VisionHalfAngle = 45.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Perception")
+	float HearingRange = 2500.f;
+
+	// ---------- Comportamento ----------
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Behavior") float PatrolRadius = 1500.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Behavior") float PatrolSpeed = 150.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Behavior") float InvestigateSpeed = 250.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Behavior") float ChaseSpeed = 480.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Behavior") float AttackRange = 150.f;
+	/** Tempo parado "farejando" no local investigado */
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Behavior") float InvestigateWaitTime = 4.f;
+	/** Quanto tempo continua perseguindo depois de perder o Operador de vista */
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Behavior") float ChaseMemoryTime = 2.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Behavior") float ThinkInterval = 0.2f;
+
+private:
+	UFUNCTION()
+	void HandleTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
+
+	void Think();
+	void SetState(EMutantState NewState);
+	void EnterState(EMutantState NewState);
+	void StartInvestigation(const FVector& Location);
+
+	void TickPatrol();
+	void TickInvestigate();
+	void TickChase();
+	void TickAttack();
+
+	bool CanSeeOperatorNow() const;
+	void ApplySenseConfig();
+
+	EMutantState State = EMutantState::Patrol;
+	TWeakObjectPtr<AOperatorCharacter> Operator;
+
+	bool  bOperatorInSightCone = false;
+	bool  bSeenThisThink = false;
+	bool  bWaitingAtInvestigation = false;
+	float LastSeenTime = -1000.f;
+	float StateEnterTime = 0.f;
+	FVector LastKnownLocation = FVector::ZeroVector;
+
+	FTimerHandle ThinkTimer;
+};
+```
+
+### 2.4 `AI/MutantAIController.cpp`
+
+```cpp
+#include "AI/MutantAIController.h"
+
+#include "AI/MutantCharacter.h"
+#include "Player/OperatorCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Navigation/PathFollowingComponent.h"
+#include "NavigationSystem.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AIPerceptionSystem.h"
+#include "Perception/AISenseConfig_Hearing.h"
+#include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISense_Hearing.h"
+#include "Perception/AISense_Sight.h"
+#include "TimerManager.h"
+
+AMutantAIController::AMutantAIController()
+{
+	Perception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("Perception"));
+	SetPerceptionComponent(*Perception);
+
+	SightConfig   = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
+	HearingConfig = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearingConfig"));
+
+	SightConfig->DetectionByAffiliation.bDetectEnemies    = true;
+	SightConfig->DetectionByAffiliation.bDetectNeutrals   = true;
+	SightConfig->DetectionByAffiliation.bDetectFriendlies = true;
+	SightConfig->SetMaxAge(5.f);
+
+	HearingConfig->DetectionByAffiliation.bDetectEnemies    = true;
+	HearingConfig->DetectionByAffiliation.bDetectNeutrals   = true;
+	HearingConfig->DetectionByAffiliation.bDetectFriendlies = true;
+	HearingConfig->SetMaxAge(3.f);
+
+	ApplySenseConfig();
+	Perception->SetDominantSense(UAISense_Sight::StaticClass());
+}
+
+void AMutantAIController::ApplySenseConfig()
+{
+	SightConfig->SightRadius                  = FlashlightSightRange;
+	SightConfig->LoseSightRadius              = FlashlightSightRange + 300.f;
+	SightConfig->PeripheralVisionAngleDegrees = VisionHalfAngle;
+	HearingConfig->HearingRange               = HearingRange;
+
+	Perception->ConfigureSense(*SightConfig);
+	Perception->ConfigureSense(*HearingConfig);
+}
+
+void AMutantAIController::BeginPlay()
+{
+	Super::BeginPlay();
+	ApplySenseConfig(); // aplica valores editados no Blueprint
+	Perception->OnTargetPerceptionUpdated.AddUniqueDynamic(this, &AMutantAIController::HandleTargetPerceptionUpdated);
+}
+
+void AMutantAIController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+	EnterState(EMutantState::Patrol);
+	GetWorldTimerManager().SetTimer(ThinkTimer, this, &AMutantAIController::Think, ThinkInterval, true);
+}
+
+void AMutantAIController::OnUnPossess()
+{
+	GetWorldTimerManager().ClearTimer(ThinkTimer);
+	Super::OnUnPossess();
+}
+
+// ============================================================ Percepção
+
+void AMutantAIController::HandleTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
+{
+	AOperatorCharacter* SensedOperator = Cast<AOperatorCharacter>(Actor);
+	if (!SensedOperator)
+	{
+		return; // ignora outros mutantes
+	}
+	Operator = SensedOperator;
+
+	const TSubclassOf<UAISense> Sense = UAIPerceptionSystem::GetSenseClassForStimulus(this, Stimulus);
+
+	if (Sense == UAISense_Sight::StaticClass())
+	{
+		bOperatorInSightCone = Stimulus.WasSuccessfullySensed();
+		if (!bOperatorInSightCone)
+		{
+			LastKnownLocation = Stimulus.StimulusLocation; // onde foi visto pela última vez
+		}
+	}
+	else if (Sense == UAISense_Hearing::StaticClass())
+	{
+		if (Stimulus.WasSuccessfullySensed() && State != EMutantState::Chase && State != EMutantState::Attack)
+		{
+			StartInvestigation(Stimulus.StimulusLocation);
+		}
+	}
+}
+
+bool AMutantAIController::CanSeeOperatorNow() const
+{
+	const AOperatorCharacter* Op = Operator.Get();
+	const APawn* Me = GetPawn();
+	if (!Op || !Me || !bOperatorInSightCone)
+	{
+		return false;
+	}
+
+	// No escuro o Operador só é visto de perto; com a lanterna acesa, de longe
+	const float Range = Op->IsFlashlightOn() ? FlashlightSightRange : DarkSightRange;
+	return FVector::DistSquared(Op->GetActorLocation(), Me->GetActorLocation()) <= FMath::Square(Range);
+}
+
+// ============================================================ FSM
+
+void AMutantAIController::Think()
+{
+	if (!GetPawn())
+	{
+		return;
+	}
+
+	bSeenThisThink = CanSeeOperatorNow();
+	if (bSeenThisThink)
+	{
+		LastKnownLocation = Operator->GetActorLocation();
+		LastSeenTime      = GetWorld()->GetTimeSeconds();
+		if (State == EMutantState::Patrol || State == EMutantState::Investigate)
+		{
+			SetState(EMutantState::Chase);
+		}
+	}
+
+	switch (State)
+	{
+	case EMutantState::Patrol:      TickPatrol();      break;
+	case EMutantState::Investigate: TickInvestigate(); break;
+	case EMutantState::Chase:       TickChase();       break;
+	case EMutantState::Attack:      TickAttack();      break;
+	}
+}
+
+void AMutantAIController::SetState(EMutantState NewState)
+{
+	if (NewState != State)
+	{
+		EnterState(NewState);
+	}
+}
+
+void AMutantAIController::EnterState(EMutantState NewState)
+{
+	State          = NewState;
+	StateEnterTime = GetWorld()->GetTimeSeconds();
+
+	ACharacter* MyCharacter = Cast<ACharacter>(GetPawn());
+	if (!MyCharacter)
+	{
+		return;
+	}
+	UCharacterMovementComponent* Move = MyCharacter->GetCharacterMovement();
+
+	ClearFocus(EAIFocusPriority::Gameplay);
+	Move->bOrientRotationToMovement     = true;
+	Move->bUseControllerDesiredRotation = false;
+
+	switch (NewState)
+	{
+	case EMutantState::Patrol:
+		Move->MaxWalkSpeed = PatrolSpeed;
+		break;
+
+	case EMutantState::Investigate:
+		Move->MaxWalkSpeed = InvestigateSpeed;
+		break;
+
+	case EMutantState::Chase:
+		Move->MaxWalkSpeed = ChaseSpeed;
+		break;
+
+	case EMutantState::Attack:
+		StopMovement();
+		Move->bOrientRotationToMovement     = false;
+		Move->bUseControllerDesiredRotation = true; // gira para encarar o alvo
+		SetFocus(Operator.Get());
+		break;
+	}
+
+	if (AMutantCharacter* Mutant = Cast<AMutantCharacter>(MyCharacter))
+	{
+		Mutant->NotifyAIStateChanged(NewState);
+	}
+}
+
+void AMutantAIController::StartInvestigation(const FVector& Location)
+{
+	SetState(EMutantState::Investigate);
+	bWaitingAtInvestigation = false;
+	MoveToLocation(Location, 80.f, true, true, true);
+}
+
+void AMutantAIController::TickPatrol()
+{
+	if (GetMoveStatus() != EPathFollowingStatus::Idle)
+	{
+		return; // ainda andando até o ponto anterior
+	}
+
+	if (UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld()))
+	{
+		FNavLocation Point;
+		if (NavSystem->GetRandomReachablePointInRadius(GetPawn()->GetActorLocation(), PatrolRadius, Point))
+		{
+			MoveToLocation(Point.Location, 50.f);
+		}
+	}
+}
+
+void AMutantAIController::TickInvestigate()
+{
+	const float Now = GetWorld()->GetTimeSeconds();
+
+	if (!bWaitingAtInvestigation)
+	{
+		if (GetMoveStatus() == EPathFollowingStatus::Idle)
+		{
+			bWaitingAtInvestigation = true; // chegou (ou não há caminho): fica parado ouvindo
+			StateEnterTime = Now;
+		}
+	}
+	else if (Now - StateEnterTime >= InvestigateWaitTime)
+	{
+		SetState(EMutantState::Patrol);
+	}
+}
+
+void AMutantAIController::TickChase()
+{
+	AOperatorCharacter* Op = Operator.Get();
+	if (!Op)
+	{
+		SetState(EMutantState::Patrol);
+		return;
+	}
+
+	const float Now = GetWorld()->GetTimeSeconds();
+
+	if (bSeenThisThink)
+	{
+		const float Distance = FVector::Dist2D(Op->GetActorLocation(), GetPawn()->GetActorLocation());
+		if (Distance <= AttackRange)
+		{
+			SetState(EMutantState::Attack);
+			return;
+		}
+		MoveToActor(Op, AttackRange * 0.7f);
+	}
+	else if (Now - LastSeenTime <= ChaseMemoryTime)
+	{
+		MoveToLocation(LastKnownLocation, 50.f); // vai até onde viu por último (sem "visão de raio X")
+	}
+	else
+	{
+		StartInvestigation(LastKnownLocation);
+	}
+}
+
+void AMutantAIController::TickAttack()
+{
+	AOperatorCharacter* Op = Operator.Get();
+	if (!Op)
+	{
+		SetState(EMutantState::Patrol);
+		return;
+	}
+
+	const float Distance = FVector::Dist2D(Op->GetActorLocation(), GetPawn()->GetActorLocation());
+	if (Distance > AttackRange * 1.3f)
+	{
+		SetState(EMutantState::Chase);
+		return;
+	}
+
+	if (AMutantCharacter* Mutant = Cast<AMutantCharacter>(GetPawn()))
+	{
+		Mutant->TryAttack(Op);
+	}
+}
+```
+
+### 2.5 Alterações no `Player/OperatorCharacter.h`
+
+Na seção `public:`, depois de `IsExhausted()`:
+
+```cpp
+	UFUNCTION(BlueprintCallable, Category = "Krastov|Movement")
+	void ToggleCrouch();
+```
+
+Na seção `protected:`, depois de `ExhaustionRecoverRatio`:
+
+```cpp
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|Movement", meta = (ClampMin = "0.1", ClampMax = "1.0"))
+	float CrouchSpeedFactor = 0.45f;
+
+	// ---------- Ruído (ouvido pelos mutantes) ----------
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|Noise") float CrouchNoiseRange = 250.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|Noise") float WalkNoiseRange   = 900.f;
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|Noise") float SprintNoiseRange = 2000.f;
+	/** Distância percorrida entre dois passos */
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|Noise") float StrideLength     = 120.f;
+	/** Desenha uma esfera amarela com o alcance de cada passo */
+	UPROPERTY(EditAnywhere,     Category = "Krastov|Noise") bool  bDebugDrawNoise  = false;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Krastov")
+	void OnFootstep(float NoiseRange);
+```
+
+Na seção `private:`, depois de `HandleStaminaChanged`:
+
+```cpp
+	void UpdateFootsteps();
+	FTimerHandle FootstepTimer;
+	float StrideAccumulator = 0.f;
+```
+
+### 2.6 Alterações no `Player/OperatorCharacter.cpp`
+
+**a) Includes:** adicione junto aos outros no topo:
+
+```cpp
+#include "Perception/AISense_Hearing.h"
+#include "DrawDebugHelpers.h"
+#include "TimerManager.h"
+
+namespace
+{
+	constexpr float FootstepCheckInterval = 0.05f;
+}
+```
+
+**b) Construtor:** depois da linha `Move->AirControl = 0.05f;`:
+
+```cpp
+	Move->GetNavAgentPropertiesRef().bCanCrouch = true;
+```
+
+**c) `BeginPlay`:** logo antes de `RecalculateMovement();` no final:
+
+```cpp
+	GetWorldTimerManager().SetTimer(FootstepTimer, this, &AOperatorCharacter::UpdateFootsteps, FootstepCheckInterval, true);
+```
+
+**d) `RecalculateMovement`:** depois da linha `Move->MaxAcceleration = ...;`:
+
+```cpp
+	Move->MaxWalkSpeedCrouched = BaseWalkSpeed * Penalty * CrouchSpeedFactor;
+```
+
+**e) `SetSprinting`:** como primeira linha dentro da função:
+
+```cpp
+	if (bNewWantsSprint && bIsCrouched)
+	{
+		UnCrouch(); // correr levanta o Operador
+	}
+```
+
+**f) Funções novas, no final do arquivo:**
+
+```cpp
+void AOperatorCharacter::ToggleCrouch()
+{
+	if (bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		SetSprinting(false);
+		Crouch();
+	}
+}
+
+void AOperatorCharacter::UpdateFootsteps()
+{
+	const UCharacterMovementComponent* Move = GetCharacterMovement();
+	const float Speed = GetVelocity().Size2D();
+
+	if (!Move->IsMovingOnGround() || Speed < 10.f)
+	{
+		StrideAccumulator = 0.f;
+		return;
+	}
+
+	StrideAccumulator += Speed * FootstepCheckInterval;
+	if (StrideAccumulator < StrideLength)
+	{
+		return;
+	}
+	StrideAccumulator = 0.f;
+
+	const bool bSprintActive = bWantsSprint && !bExhausted && !bIsCrouched;
+	const float NoiseRange = bIsCrouched ? CrouchNoiseRange : (bSprintActive ? SprintNoiseRange : WalkNoiseRange);
+
+	UAISense_Hearing::ReportNoiseEvent(GetWorld(), GetActorLocation(), 1.f, this, NoiseRange, TEXT("Footstep"));
+
+	if (bDebugDrawNoise)
+	{
+		DrawDebugSphere(GetWorld(), GetActorLocation(), NoiseRange, 16, FColor::Yellow, false, 0.4f);
+	}
+
+	OnFootstep(NoiseRange); // BP: som do passo
+}
+```
+
+### 2.7 Alterações no `Player/OperatorPlayerController`
+
+No `.h`, junto às outras `UInputAction`:
+
+```cpp
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|Input")
+	TObjectPtr<UInputAction> CrouchAction;
+```
+
+E na seção `private:`:
+
+```cpp
+	void HandleCrouch();
+```
+
+No `.cpp`, dentro de `SetupInputComponent`, depois do bind da lanterna:
+
+```cpp
+	if (CrouchAction) EIC->BindAction(CrouchAction, ETriggerEvent::Started, this, &ThisClass::HandleCrouch);
+```
+
+E a função nova, no final do arquivo:
+
+```cpp
+void AOperatorPlayerController::HandleCrouch()
+{
+	if (AOperatorCharacter* Operator = GetPawn<AOperatorCharacter>())
+	{
+		Operator->ToggleCrouch();
+	}
+}
+```
+
+### 2.8 Alterações no `Zone/ZoneGenerator.h`
+
+Depois de `class UInstancedStaticMeshComponent;` no topo:
+
+```cpp
+class APawn;
+```
+
+Na seção `protected:`, depois do bloco *Geometria*:
+
+```cpp
+	// ---------- Mutantes ----------
+	UPROPERTY(EditAnywhere, Category = "Krastov|Zone|Mutants")
+	TSubclassOf<APawn> MutantClass;
+
+	UPROPERTY(EditAnywhere, Category = "Krastov|Zone|Mutants", meta = (ClampMin = "0"))
+	int32 MutantCount = 3;
+
+	/** Distância mínima (em passos de célula) entre o Spawn e um mutante */
+	UPROPERTY(EditAnywhere, Category = "Krastov|Zone|Mutants", meta = (ClampMin = "0"))
+	int32 MinMutantDistanceFromSpawn = 4;
+```
+
+Na seção `private:`, depois de `void TeleportPlayer();`:
+
+```cpp
+	void SpawnMutants();
+	void DestroyMutants();
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<APawn>> SpawnedMutants;
+```
+
+### 2.9 Alterações no `Zone/ZoneGenerator.cpp`
+
+**a) Include:** adicione `#include "GameFramework/Pawn.h"`.
+
+**b) Em `Generate()`:** logo depois de `BuildGeometry();`:
+
+```cpp
+	SpawnMutants();
+```
+
+**c) Em `ClearZone()`:** depois de `Modify();`:
+
+```cpp
+	DestroyMutants();
+```
+
+**d) Funções novas, no final do arquivo:**
+
+```cpp
+void AZoneGenerator::DestroyMutants()
+{
+	for (APawn* Mutant : SpawnedMutants)
+	{
+		if (IsValid(Mutant))
+		{
+			Mutant->Destroy();
+		}
+	}
+	SpawnedMutants.Reset();
+}
+
+void AZoneGenerator::SpawnMutants()
+{
+	DestroyMutants();
+
+	// Só spawna durante o jogo (o botão Generate no editor não cria mutantes)
+	UWorld* World = GetWorld();
+	if (!World || !World->IsGameWorld() || !MutantClass || MutantCount <= 0)
+	{
+		return;
+	}
+
+	// Candidatas: fora da área segura e longe do Spawn
+	TArray<FIntPoint> Candidates;
+	for (const FZoneCell& Cell : Cells)
+	{
+		if (!Cell.bIsSafe && Cell.DistanceFromSpawn >= MinMutantDistanceFromSpawn)
+		{
+			Candidates.Add(Cell.Coord);
+		}
+	}
+
+	// Embaralha de forma determinística (mesma Seed = mesmos mutantes)
+	FRandomStream Stream(Seed + 7919);
+	for (int32 i = Candidates.Num() - 1; i > 0; --i)
+	{
+		Candidates.Swap(i, Stream.RandRange(0, i));
+	}
+
+	// Salas primeiro
+	Candidates.StableSort([this](const FIntPoint& A, const FIntPoint& B)
+	{
+		return Cells[Index(A.X, A.Y)].bIsRoom && !Cells[Index(B.X, B.Y)].bIsRoom;
+	});
+
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+	const int32 Count = FMath::Min(MutantCount, Candidates.Num());
+	for (int32 i = 0; i < Count; ++i)
+	{
+		const FVector Location = CellToWorld(Candidates[i]) + FVector(0.f, 0.f, 100.f);
+		const FRotator Rotation(0.f, Stream.FRandRange(0.f, 360.f), 0.f);
+		if (APawn* Mutant = World->SpawnActor<APawn>(MutantClass, Location, Rotation, Params))
+		{
+			SpawnedMutants.Add(Mutant);
+		}
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("[Zone] %d mutantes spawnados (%d celulas candidatas)"), SpawnedMutants.Num(), Candidates.Num());
+}
+```
+
+## 3. Compilar
+
+1. Feche o editor.
+2. Clique com o botão direito no `.uproject` e use **Generate Visual Studio project files**. Isso é necessário por causa da pasta `AI` nova.
+3. No VS, use **Build** com **Development Editor**.
+4. Se der erro, cole aqui a primeira linha com `error` da janela Output.
+
+## 4. Assets no editor
+
+### 4.1 Agachar
+
+1. Crie `IA_Crouch` (`Digital (bool)`) em `Krastov/Input/Actions`.
+2. No `IMC_Zone`, clique no `+` de *Mappings*, escolha `IA_Crouch` e adicione as teclas `Left Ctrl`, `C` e `Gamepad Face Button Right`.
+3. No `BP_OperatorPC`, abra **Class Defaults > Krastov > Input** e configure `Crouch Action = IA_Crouch`.
+
+> [!NOTE]
+> O AnimBP do template provavelmente não tem animação de agachar. O Operador fica mais lento e silencioso, mas visualmente continua em pé. A animação entra depois.
+
+### 4.2 Dano do mutante
+
+Em `Krastov/Abilities/Effects`, crie um `GameplayEffect` chamado `GE_MutantHit`:
+
+- **Duration Policy:** `Instant`
+- **Modifier:** `KrastovAttributeSet.Health`, `Add`, `-20`
+
+### 4.3 `BP_Mutant`
+
+1. Crie a pasta `Krastov/Blueprints/AI`.
+2. Em **C++ Classes > KRASTOVExtraction > AI**, clique com o botão direito em `MutantCharacter` e use *Create Blueprint class based on...* Dê o nome `BP_Mutant`.
+3. Configure o **Mesh**:
+   - Mesh do Quinn (ou do Manny)
+   - Location Z `-90`, Rotation Yaw `-90`
+   - O mesmo AnimBP usado no `BP_Operator`
+   - Para diferenciar, Scale `1.15`
+4. **Opcional:** adicione um *Point Light* vermelho fraco (`Intensity 5`, `Attenuation 200`) com o nome `Eyes`, preso na cabeça.
+5. Em **Class Defaults > Krastov > Combat**, configure `Attack Effect = GE_MutantHit`.
+6. No **Event Graph**, adicione `Event On AI State Changed` e ligue a um *Print String*. Ao conectar o pino `New State` no texto, o editor converte o enum para texto sozinho.
+7. **Compile** e **Save**.
+
+### 4.4 Gerador
+
+No `BP_ZoneGenerator` (ou na instância no mapa), configure `Krastov|Zone|Mutants`:
+
+- `Mutant Class = BP_Mutant`
+- `Mutant Count = 3`
+
+## 5. Testar a furtividade
+
+Dê Play no `L_Zone_Test`. Para visualizar o ruído, ative `Debug Draw Noise` no `BP_Operator`, em `Krastov|Noise`.
+
+| Teste | Resultado esperado |
+| :--- | :--- |
+| **Andar normal perto de um mutante, fora da visão dele** | Ele vai investigar o ponto onde ouviu |
+| **Agachado (`Ctrl`) passando perto** | Não ouve. A esfera de ruído é pequena |
+| **Correndo (`Shift`) a 15 m** | Ouve e vem investigar |
+| **Lanterna apagada, a 15 m, na frente dele** | Não te vê |
+| **Lanterna acesa, a 15 m, na frente dele** | Te vê e persegue |
+| **Esconder-se atrás de uma parede** | A parede bloqueia a visão. Depois de 2 s ele vai ao último ponto onde te viu e fica "farejando" |
+| **Deixar ele te alcançar** | Ataca a cada 1,2 s. `showdebug abilitysystem` mostra a `Health` caindo 20 por golpe |
+
+A morte do Operador (vida em 0) e o dano no mutante entram na Etapa 5. Por enquanto a vida só cai.
+
+### Ferramenta de depuração da IA
+
+Durante o Play, aponte a câmera para um mutante e aperte `'` (apóstrofo). Esse é o **Gameplay Debugger**. Depois:
+
+- **Numpad 4:** categoria *Perception*. Mostra o cone de visão e o que ele está percebendo.
+- **Numpad 0:** *NavMesh*.
+
+Se o apóstrofo abrir o console (comum em teclado ABNT2), digite `EnableGDT` no console, ou troque a tecla em **Project Settings > Engine > Gameplay Debugger > Activation Key**.
+
+## 6. Ajustes de equilíbrio
+
+Valores no `BP_Mutant` (**Class Defaults > Krastov|AI**), herdados do controller, ou nos padrões do C++:
+
+| Quero que... | Ajuste |
+| :--- | :--- |
+| **O escuro proteja mais** | Diminua `Dark Sight Range` (por exemplo `700`) |
+| **A lanterna seja mais perigosa** | Aumente `Flashlight Sight Range` |
+| **Os passos chamem menos atenção** | Diminua `Walk Noise Range` no `BP_Operator` |
+| **Ele desista mais rápido** | Diminua `Chase Memory Time` e `Investigate Wait Time` |
+
+> [!TIP]
+> Os valores de `Krastov|AI` pertencem ao controller, não ao `BP_Mutant`. Para editá-los no editor, crie um `BP_MutantAIController` a partir de `MutantAIController` e, no `BP_Mutant`, configure `AI Controller Class = BP_MutantAIController`.
+
+Uma limitação atual: o som atravessa paredes. A audição considera só a distância. A atenuação do som por paredes entra junto com o áudio da Etapa 7.
+
+Depois de testar, faça o commit:
+
+```bash
+git add .
+git commit -m "Etapa 3: mutante com visão (cone + LOS + lanterna), audição de passos, agachar e FSM"
+git push
+```
+
+Me conte como o mutante se comportou: se patrulha, se investiga o barulho e se persegue quando você liga a lanterna.
