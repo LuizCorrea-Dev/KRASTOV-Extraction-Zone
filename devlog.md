@@ -2417,3 +2417,109 @@ git push
 ```
 
 Me conte como o mutante se comportou: se patrulha, se investiga o barulho e se persegue quando você liga a lanterna.
+
+
+||||||
+-------------------
+
+1. Decisões antes de escrever código
+O documento tem algumas contradições. Para cada uma, deixo uma proposta. Todos os tamanhos vão ser configuráveis no Blueprint, então dá para mudar depois sem recompilar.
+
+      
+        
+        #ContradiçãoMinha proposta
+        1Tamanho da Maleta: "8x5" na sua mensagem, "6x4" na tabelaMaleta 8x5 (40 slots)2Bolso seguro: "6x4" na mensagem, "chumbo 2x2" na seção 5.3Safe Pocket 2x2 (4 slots). Com um bolso de 24 slots, o jogador protegeria quase tudo, e isso enfraquece o pilar de perda alta ao morrer. O 2x2 obriga a escolher o que salvar3Formato da arma longa3x1, girável em 90° com a tecla R enquanto você arrasta. Pistola 1x1, máscara HO-17 2x1, demais itens 1x14Dano radioativo "+30% a +35%"+35% fixo5Como a "Amplificação de Nó" somaArtefatos encostados entre si formam uma cadeia. Se a cadeia toca a arma, a arma recebe todos os elementos da cadeia e um multiplicador de ×1,15 por artefato extra (2 artefatos = ×1,15, 3 = ×1,32)6O mesmo elemento repetido na arma (dois artefatos verdes)Não acumula o bônus do elemento. Conta só para o multiplicador de nó7Os itens do Safe Pocket pesam?Pesam, porque chumbo é pesado. Entram no CarryWeight8Mapas numerados 5, 3, 2, 1, 0Não existe Mapa 4. Isso é intencional?
+        
+      
+    Responda só os números em que você discorda. O resto eu sigo como proposto.
+2. Roadmap atualizado
+O documento novo adiciona sistemas que não estavam nas 7 etapas originais: máscara e filtros, campanha em 5 mapas, boss e recursos do bunker. Reorganizei assim:
+
+      
+        
+        EtapaConteúdoStatus
+        1Controle do Operador✅2Zona procedural✅3IA dos mutantes✅ (as pendências foram distribuídas abaixo)4Maleta: grade 8x5 + Safe Pocket 2x2, rotação, peso no CarryWeight, cálculo das sinergias com linhas neon, coleta de itens na Zona, morte do Operador (perde a Maleta e mantém o Safe Pocket)Agora5Balística e combate: AK-74M e pistola, dano nos mutantes, aplicação das sinergias (queimadura de 8 DPS, arcos elétricos em até 3 alvos, Cryo-Slow de 50%), kits médicos com +35% de cura, feedback do golpe do mutante6Sobrevivência: máscara HO-17, filtros Pátio-2M (165 s) e K-6 (360 s), desgaste +50% ao correr, esgotamento (+15 RADS/s e −10 HP/s), zonas de radiação, sangramento e ataduras7Campanha em cadeia: os 5 mapas com temas próprios, zonas de transição com requisitos, mutante Brute Flesh, Boss Obelisk (2x)8Bunker modular: 8 módulos, energia, água e O2, armário de 50 slots, bancada com a Maleta ao lado da arma, SaveGame com medalha, créditos e sucata9Atmosfera e apresentação: névoa de guerra (shader), olhos com EyeGlow, anéis de som visíveis, teto que fica transparente (Roof Alpha Fading), neon estilo Balatro, áudio, som abafado por paredes
+        
+      
+    A morte do Operador entrou na Etapa 4 porque é ela que define a regra "perde a Maleta, mantém o Safe Pocket".
+Ajuste rápido: câmera a 72°
+Esse ajuste do documento leva um minuto e não precisa recompilar:
+
+Abra o BP_Operator e, em Components, selecione CameraBoom.
+Em Transform > Rotation, mude Y (o pitch) de -60 para -72.
+Em Camera > Target Arm Length, teste 1600. Com a câmera mais vertical, ela precisa recuar um pouco para mostrar a mesma área.
+Clique em Compile e depois em Save.
+
+3. Etapa 4 dividida em partes
+Cada parte é compilada e testada antes da próxima, como fizemos até aqui.
+
+      
+        
+        ParteO que entregaComo testar
+        4.1 Dados e grade (C++)UKrastovItemDefinition (Data Asset com tamanho, peso, categoria e elemento), UInventoryGridComponent (cabe aqui? adicionar, mover, girar, remover, peso total), dois componentes no Operador (Maleta e SafePocket), peso ligado ao CarryWeightComandos no Cmd: KrastovGiveItem, KrastovDumpInventory. A grade é desenhada em texto no Output Log4.2 Sinergias (C++)Detecção por adjacência ortogonal, cadeias de artefatos, resultado por arma (multiplicadores de dano e cadência, elementos ativos) e bônus de cura. O Safe Pocket fica isoladoO mesmo KrastovDumpInventory passa a listar as conexões e os multiplicadores4.3 Interface (UMG)WBP_Maleta abre com a tecla Tab: grade, arrastar e soltar, R para girar, linhas neon verdes, roxas e azuis entre itens conectadosVisual4.4 Coleta na ZonaAItemPickup com brilho na cor do elemento, tecla E para pegar, loot espalhado pelas salas do gerador (determinístico pela Seed)Jogar e coletar4.5 MorteVida em 0: ragdoll, input desligado, Maleta perdida, Safe Pocket guardado (por enquanto em memória; o SaveGame vem na Etapa 8), reinício da runDeixar um mutante te eliminar
+        
+      
+    Por que a 4.1 vem sem interface
+A lógica da grade (o que cabe onde) e das sinergias é a parte mais difícil de acertar. Testando por comandos de texto, um bug de posição não se mistura com um bug de interface. Foi o mesmo método do comando KrastovSetLoad na Etapa 1.
+Itens de teste que vou criar junto
+
+DA_AK74M: arma longa 3x1, 3,6 kg
+DA_PM_Pistol: pistola 1x1
+DA_Isotope_Zaria: artefato RAD_GREEN
+DA_Core_Spark: artefato ELEC_PURPLE
+DA_Crystal_Cryo: artefato CRYO_BLUE
+DA_Medkit e DA_Bandage: itens médicos
+DA_GasMask_HO17: 2x1, que vai ser usada na Etapa 6
+
+Me responda sobre as decisões da seção 1, principalmente a 2 (tamanho do Safe Pocket) e a 5 (como a amplificação de nó soma). Com isso, a próxima resposta já traz o código da 4.1. definicao, Maleta 8x5 (40 slots), Safe Pocket 4x3 (12 slots), 3=ok, 4=ok, 5=ok, 6=ok,7=ok, 8= 543210 , 5 mapa normal, 4 mapa parq achar a mascara e filtro, 3 comecça sem precisar de mascara mas 2/3 do mapa tem gas toxico (acahr a roupa ra radiacao), 2 gas e radiacao, 1 achar a cahve para abrir a porta para a ultoma fase do Boss, 0 fase do BOSS
+
+Decisões registradas
+Item	Definição
+Maleta	8x5 (40 slots), transmite sinergias, perdida ao morrer
+Safe Pocket	4x3 (12 slots), blindado (sem sinergia), mantido ao morrer, pesa no CarryWeight
+Formatos	Arma longa 3x1 (girável), pistola 1x1, máscara 2x1, demais 1x1
+Sinergias	Radioativa +35%. Cadeia de artefatos dá ×1,15 por artefato extra. Elemento repetido não acumula
+Etapa 7 atualizada: campanha 5 → 0
+Mapa	Tema	Objetivo para avançar
+5	Periferia (mapa normal)	Extrair
+4	Busca de equipamento	Achar a máscara HO-17 e filtros
+3	Começa sem gás, mas 2/3 do mapa tem gás tóxico	Achar o traje antirradiação
+2	Gás + radiação	Sobreviver usando máscara e traje
+1	Marco Zero	Achar a chave da porta do boss
+0	Arena do Boss Obelisk	Derrotar o boss e extrair
+Para isso, a categoria dos itens já inclui Traje e Item-Chave.
+
+Etapa 4.1: dados e grade
+Esta parte entrega a lógica do inventário, sem interface ainda: tamanhos, colisão entre itens, rotação, as duas grades no Operador e o peso ligado ao CarryWeight. Os testes são feitos por comandos no Cmd.
+
+Arquivos
+Crie a pasta Inventory pelo Explorer:
+
+Plain text
+Source/KRASTOVExtraction/Inventory/
+├── KrastovItemDefinition.h
+├── KrastovItemDefinition.cpp
+├── InventoryGridComponent.h
+└── InventoryGridComponent.cpp
+Alterados: OperatorCharacter.h/.cpp e OperatorPlayerController.h/.cpp.
+
+Em todos os headers, o .generated.h fica por último, separado por uma linha em branco. O .clang-format já protege isso, mas confira.
+
+Criar os itens (Data Assets)
+No Content Browser, crie as pastas Content/Krastov/Items/Weapons, Artifacts, Medical e Gear.
+Em cada pasta, clique com o botão direito em um espaço vazio e escolha Miscellaneous > Data Asset (o ícone de gráfico de pizza).
+Na janela que abrir, escolha KrastovItemDefinition e clique em Select.
+Dê o nome, abra o asset e preencha:
+Pasta	Asset	Item Id	Display Name	Category	Element	Size	Weight
+Weapons	DA_AK74M	AK74M	AK-74M	Arma Longa		3, 1	3.6
+Weapons	DA_PM_Pistol	PM	Pistola PM	Pistola		1, 1	0.73
+Artifacts	DA_Isotope_Zaria	Zaria	Isótopo Zaria	Artefato	RAD_GREEN	1, 1	0.5
+Artifacts	DA_Core_Spark	Spark	Núcleo Spark	Artefato	ELEC_PURPLE	1, 1	0.5
+Artifacts	DA_Crystal_Cryo	Cryo	Cristal Crio	Artefato	CRYO_BLUE	1, 1	0.6
+Medical	DA_Medkit	Medkit	Kit Médico	Médico		1, 1	0.8
+Medical	DA_Bandage	Bandage	Atadura	Médico		1, 1	0.1
+Gear	DA_GasMask_HO17	HO17	Máscara HO-17	Máscara de Gás		2, 1	0.9
+O campo Element só aparece quando Category = Artefato.
+O Item Id não pode ter espaços, porque é o nome usado nos comandos.
+Deixe Can Rotate marcado em todos.
+Abra o BP_OperatorPC, clique em Class Defaults e vá em Krastov | Debug > Debug Item Catalog. Clique no + oito vezes e escolha um Data Asset em cada posição.

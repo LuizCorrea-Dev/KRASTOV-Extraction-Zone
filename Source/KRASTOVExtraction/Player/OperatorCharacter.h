@@ -9,6 +9,7 @@
 class UAbilitySystemComponent;
 class UKrastovAttributeSet;
 class USpotLightComponent;
+class UInventoryGridComponent;
 class USpringArmComponent;
 class UCameraComponent;
 class UGameplayEffect;
@@ -39,6 +40,12 @@ public:
 
   UFUNCTION(BlueprintCallable, Category = "Krastov|Movement")
   void ToggleCrouch();
+
+  UFUNCTION(BlueprintPure, Category = "Krastov|Inventory")
+  UInventoryGridComponent *GetMaleta() const { return Maleta; }
+
+  UFUNCTION(BlueprintPure, Category = "Krastov|Inventory")
+  UInventoryGridComponent *GetSafePocket() const { return SafePocket; }
 
 protected:
   virtual void BeginPlay() override;
@@ -123,6 +130,16 @@ protected:
   UFUNCTION(BlueprintImplementableEvent, Category = "Krastov")
   void OnRecoveredFromExhaustion();
 
+  //---------- Inventário ----------
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Krastov|Inventory",
+            meta = (AllowPrivateAccess = "true"))
+  TObjectPtr<UInventoryGridComponent> Maleta;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Krastov|Inventory",
+            meta = (AllowPrivateAccess = "true"))
+  TObjectPtr<UInventoryGridComponent> SafePocket;
+
 private:
   FActiveGameplayEffectHandle
   ApplyEffectToSelf(TSubclassOf<UGameplayEffect> EffectClass);
@@ -134,6 +151,10 @@ private:
   void UpdateFootsteps();
   FTimerHandle FootstepTimer;
   float StrideAccumulator = 0.f;
+
+  UFUNCTION()
+  void HandleInventoryChanged(UInventoryGridComponent *Grid);
+  void UpdateCarryWeightFromInventory();
 
   bool bWantsSprint = false;
   bool bExhausted = false;

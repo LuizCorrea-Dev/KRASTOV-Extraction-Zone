@@ -10,6 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Perception/AISense_Hearing.h"
 #include "TimerManager.h"
+#include "Inventory/InventoryGridComponent.h"
 
 namespace {
 constexpr float FootstepCheckInterval = 0.05f;
@@ -51,6 +52,22 @@ AOperatorCharacter::AOperatorCharacter() {
   Flashlight->bCastVolumetricShadow = true;
   Flashlight->SetVisibility(false);
 
+  // ---------- Inventário ----------
+  Maleta = CreateDefaultSubobject<UInventoryGridComponent>(TEXT("Maleta"));
+  Maleta->GridName = FText::FromString(TEXT("Maleta"));
+  Maleta->GridWidth = 8;
+  Maleta->GridHeight = 5;
+  Maleta->bTransmitsSynergy = true;
+  Maleta->bKeptOnDeath = false;
+
+  SafePocket =
+      CreateDefaultSubobject<UInventoryGridComponent>(TEXT("SafePocket"));
+  SafePocket->GridName = FText::FromString(TEXT("Safe Pocket"));
+  SafePocket->GridWidth = 4;
+  SafePocket->GridHeight = 3;
+  SafePocket->bTransmitsSynergy = false; // blindagem de chumbo
+  SafePocket->bKeptOnDeath = true;
+
   // Rotação: o personagem gira em direção à mira com taxa limitada (inércia)
   bUseControllerRotationPitch = false;
   bUseControllerRotationYaw = false;
@@ -76,6 +93,11 @@ UAbilitySystemComponent *AOperatorCharacter::GetAbilitySystemComponent() const {
 
 void AOperatorCharacter::BeginPlay() {
   Super::BeginPlay();
+
+  Maleta->OnInventoryChanged.AddDynamic(
+      this, &AOperatorCharacter::HandleInventoryChanged);
+  SafePocket->OnInventoryChanged.AddDynamic(
+      this, &AOperatorCharacter::HandleInventoryChanged);
 
   AbilitySystem->InitAbilityActorInfo(this, this);
 
@@ -227,6 +249,7 @@ void AOperatorCharacter::ToggleCrouch() {
   }
 }
 
+// BP: som do passo
 void AOperatorCharacter::UpdateFootsteps() {
   const UCharacterMovementComponent *Move = GetCharacterMovement();
   const float Speed = GetVelocity().Size2D();
@@ -255,5 +278,19 @@ void AOperatorCharacter::UpdateFootsteps() {
                     FColor::Yellow, false, 0.4f);
   }
 
-  OnFootstep(NoiseRange); // BP: som do passo
+  OnFootstep(NoiseRange);
+}
+
+// -----------inventary----------------
+void AOperatorCharacter::HandleInventoryChanged(UInventoryGridComponent *Grid) {
+  UpdateCarryWeightFromInventory();
+}
+
+void AOperatorCharacter::UpdateCarryWeightFromInventory() {
+  if (!AbilitySystem) {
+    return;
+  }
+  const float Total = Maleta->GetTotalWeight() + SafePocket->GetTotalWeight();
+  AbilitySystem->SetNumericAttributeBase(
+      UKrastovAttributeSet::GetCarryWeightAttribute(), Total);
 }

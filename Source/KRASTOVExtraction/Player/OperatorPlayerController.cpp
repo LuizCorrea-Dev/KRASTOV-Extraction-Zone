@@ -5,6 +5,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Player/OperatorCharacter.h"
+#include "Inventory/InventoryGridComponent.h"
+#include "Inventory/KrastovItemDefinition.h"
 
 void AOperatorPlayerController::BeginPlay() {
   Super::BeginPlay();
@@ -135,4 +137,143 @@ void AOperatorPlayerController::HandleCrouch() {
   if (AOperatorCharacter *Operator = GetPawn<AOperatorCharacter>()) {
     Operator->ToggleCrouch();
   }
+}
+
+// ---------------inventary ---------------
+void AOperatorPlayerController::LogMultiline(const FString &Text) {
+  TArray<FString> Lines;
+  Text.ParseIntoArrayLines(Lines, false);
+  for (const FString &Line : Lines) {
+    UE_LOG(LogTemp, Display, TEXT("%s"), *Line);
+  }
+}
+
+UKrastovItemDefinition *
+AOperatorPlayerController::FindItemDef(FName ItemId) const {
+  for (UKrastovItemDefinition *Def : DebugItemCatalog) {
+    if (Def && Def->ItemId == ItemId) {
+      return Def;
+    }
+  }
+  UE_LOG(
+      LogTemp, Warning,
+      TEXT("[Inv] Item '%s' nao esta no Debug Item Catalog do BP_OperatorPC"),
+      *ItemId.ToString());
+  return nullptr;
+}
+
+UInventoryGridComponent *
+AOperatorPlayerController::GetGrid(bool bSafePocket) const {
+  const AOperatorCharacter *Operator = GetPawn<AOperatorCharacter>();
+  if (!Operator) {
+    return nullptr;
+  }
+  return bSafePocket ? Operator->GetSafePocket() : Operator->GetMaleta();
+}
+
+void AOperatorPlayerController::KrastovGive(FName ItemId) {
+  UInventoryGridComponent *Grid = GetGrid(false);
+  UKrastovItemDefinition *Def = FindItemDef(ItemId);
+  if (!Grid || !Def) {
+    return;
+  }
+
+  FGuid NewId;
+  if (!Grid->TryAddItem(Def, NewId)) {
+    UE_LOG(LogTemp, Warning, TEXT("[Inv] Sem espaco na Maleta para %s"),
+           *ItemId.ToString());
+  }
+  KrastovDump();
+}
+
+void AOperatorPlayerController::KrastovPlace(FName ItemId, int32 X, int32 Y,
+                                             bool bRotated, bool bSafePocket) {
+  UInventoryGridComponent *Grid = GetGrid(bSafePocket);
+  UKrastovItemDefinition *Def = FindItemDef(ItemId);
+  if (!Grid || !Def) {
+    return;
+  }
+
+  FGuid NewId;
+  if (!Grid->TryAddItemAt(Def, FIntPoint(X, Y), bRotated, NewId)) {
+    UE_LOG(LogTemp, Warning, TEXT("[Inv] %s NAO CABE em (%d,%d)%s"),
+           *ItemId.ToString(), X, Y, bRotated ? TEXT(" girado") : TEXT(""));
+  }
+  KrastovDump();
+}
+
+void AOperatorPlayerController::KrastovMove(int32 ItemIndex, int32 X, int32 Y,
+                                            bool bRotated, bool bSafePocket) {
+  UInventoryGridComponent *Grid = GetGrid(bSafePocket);
+  if (!Grid || !Grid->GetItemsRef().IsValidIndex(ItemIndex)) {
+    UE_LOG(LogTemp, Warning, TEXT("[Inv] Indice %d invalido"), ItemIndex);
+    return;
+  }
+
+  const FGuid Id = Grid->GetItemsRef()[ItemIndex].InstanceId;
+  if (!Grid->MoveItem(Id, FIntPoint(X, Y), bRotated)) {
+    UE_LOG(LogTemp, Warning,
+           TEXT("[Inv] Nao foi possivel mover [%d] para (%d,%d)"), ItemIndex, X,
+           Y);
+  }
+  KrastovDump();
+}
+
+void AOperatorPlayerController::KrastovTransfer(int32 ItemIndex,
+                                                bool bFromSafePocket) {
+  UInventoryGridComponent *From = GetGrid(bFromSafePocket);
+  UInventoryGridComponent *To = GetGrid(!bFromSafePocket);
+  if (!From || !To || !From->GetItemsRef().IsValidIndex(ItemIndex)) {
+    UE_LOG(LogTemp, Warning, TEXT("[Inv] Indice %d invalido"), ItemIndex);
+    return;
+  }
+
+  const FInventoryItem Item = From->GetItemsRef()[ItemIndex];
+  FGuid NewId;
+  if (!To->TryAddItem(Item.Definition, NewId)) {
+    UE_LOG(LogTemp, Warning, TEXT("[Inv] Sem espaco no destino"));
+    return;
+  }
+
+  FInventoryItem Removed;
+  From->RemoveItem(Item.InstanceId, Removed);
+  KrastovDump();
+}
+
+void AOperatorPlayerController::KrastovRemove(int32 ItemIndex,
+                                              bool bSafePocket) {
+  UInventoryGridComponent *Grid = GetGrid(bSafePocket);
+  if (!Grid || !Grid->GetItemsRef().IsValidIndex(ItemIndex)) {
+    UE_LOG(LogTemp, Warning, TEXT("[Inv] Indice %d invalido"), ItemIndex);
+    return;
+  }
+
+  FInventoryItem Removed;
+  Grid->RemoveItem(Grid->GetItemsRef()[ItemIndex].InstanceId, Removed);
+  KrastovDump();
+}
+
+void AOperatorPlayerController::KrastovClearInv() {
+  if (UInventoryGridComponent *Grid = GetGrid(false)) {
+    Grid->ClearAll();
+  }
+  if (UInventoryGridComponent *Grid = GetGrid(true)) {
+    Grid->ClearAll();
+  }
+  KrastovDump();
+}
+
+void AOperatorPlayerController::KrastovDump() {
+  const UInventoryGridComponent *Maleta = GetGrid(false);
+  const UInventoryGridComponent *Safe = GetGrid(true);
+  if (!Maleta || !Safe) {
+    return;
+  }
+
+  LogMultiline(Maleta->BuildDebugString());
+  LogMultiline(Maleta->BuildSynergyDebugString());
+  LogMultiline(Safe->BuildDebugString());
+  LogMultiline(Safe->BuildSynergyDebugString());
+  UE_LOG(LogTemp, Display, TEXT("== Peso total: %.2f kg =="),
+         Maleta->GetTotalWeight() + Safe->GetTotalWeight());
 }

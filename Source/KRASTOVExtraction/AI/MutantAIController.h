@@ -61,7 +61,7 @@ protected:
   UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Behavior")
   float InvestigateSpeed = 250.f;
   UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Behavior")
-  float ChaseSpeed = 480.f;
+  float ChaseSpeed = 400.f;
   UPROPERTY(EditDefaultsOnly, Category = "Krastov|AI|Behavior")
   float AttackRange = 150.f;
   /** Tempo parado "farejando" no local investigado */
