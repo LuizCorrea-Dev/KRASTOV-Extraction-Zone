@@ -7,6 +7,8 @@
 #include "Player/OperatorCharacter.h"
 #include "Inventory/InventoryGridComponent.h"
 #include "Inventory/KrastovItemDefinition.h"
+#include "UI/KrastovMaletaWidget.h"
+
 
 void AOperatorPlayerController::BeginPlay() {
   Super::BeginPlay();
@@ -51,10 +53,20 @@ void AOperatorPlayerController::SetupInputComponent() {
   if (CrouchAction)
     EIC->BindAction(CrouchAction, ETriggerEvent::Started, this,
                     &ThisClass::HandleCrouch);
+
+  if (InventoryAction)  
+    EIC->BindAction(InventoryAction,  ETriggerEvent::Started, this, 
+                    &ThisClass::ToggleMaleta);
+	if (RotateItemAction)
+    EIC->BindAction(RotateItemAction, ETriggerEvent::Started, this,
+                    &ThisClass::HandleRotateItem);
+
 }
 
 void AOperatorPlayerController::HandleMove(const FInputActionValue &Value) {
   const FVector2D Input = Value.Get<FVector2D>();
+  if (bMaletaOpen) { return; }
+
   if (APawn *ControlledPawn = GetPawn()) {
     // Câmera fixa com Yaw 0: X do mundo = "cima" na tela, Y = "direita"
     ControlledPawn->AddMovementInput(FVector::ForwardVector, Input.Y);
@@ -63,6 +75,7 @@ void AOperatorPlayerController::HandleMove(const FInputActionValue &Value) {
 }
 
 void AOperatorPlayerController::HandleAimStick(const FInputActionValue &Value) {
+  if (bMaletaOpen) { return; }
   const FVector2D Input = Value.Get<FVector2D>();
   if (Input.SizeSquared() > 0.04f) {
     bUsingGamepadAim = true;
@@ -73,6 +86,7 @@ void AOperatorPlayerController::HandleAimStick(const FInputActionValue &Value) {
 
 void AOperatorPlayerController::PlayerTick(float DeltaTime) {
   Super::PlayerTick(DeltaTime);
+  if (bMaletaOpen) { return; }
 
   // Mexeu o mouse: volta para mira por cursor
   float MouseX = 0.f, MouseY = 0.f;
@@ -107,6 +121,7 @@ void AOperatorPlayerController::AimAtCursor() {
 }
 
 void AOperatorPlayerController::HandleSprintStarted() {
+  if (bMaletaOpen) { return; }
   if (AOperatorCharacter *Operator = GetPawn<AOperatorCharacter>()) {
     Operator->SetSprinting(true);
   }
@@ -276,4 +291,48 @@ void AOperatorPlayerController::KrastovDump() {
   LogMultiline(Safe->BuildSynergyDebugString());
   UE_LOG(LogTemp, Display, TEXT("== Peso total: %.2f kg =="),
          Maleta->GetTotalWeight() + Safe->GetTotalWeight());
+}
+
+void AOperatorPlayerController::ToggleMaleta()
+{
+	AOperatorCharacter* Operator = GetPawn<AOperatorCharacter>();
+	if (!Operator)
+	{
+		return;
+	}
+	if (!MaletaWidgetClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[UI] Maleta Widget Class nao configurado no BP_OperatorPC"));
+		return;
+	}
+
+	if (!MaletaWidget)
+	{
+		MaletaWidget = CreateWidget<UKrastovMaletaWidget>(this, MaletaWidgetClass);
+	}
+	if (!MaletaWidget)
+	{
+		return;
+	}
+
+	bMaletaOpen = !bMaletaOpen;
+	if (bMaletaOpen)
+	{
+		Operator->SetSprinting(false);
+		MaletaWidget->SetOperator(Operator);
+		MaletaWidget->AddToViewport(10);
+	}
+	else
+	{
+		MaletaWidget->CancelDrag();
+		MaletaWidget->RemoveFromParent();
+	}
+}
+
+void AOperatorPlayerController::HandleRotateItem()
+{
+	if (bMaletaOpen && MaletaWidget)
+	{
+		MaletaWidget->RotateHeldItem();
+	}
 }

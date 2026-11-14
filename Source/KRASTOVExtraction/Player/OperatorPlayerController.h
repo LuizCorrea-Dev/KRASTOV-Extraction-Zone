@@ -9,6 +9,8 @@ class UKrastovItemDefinition;
 class UInventoryGridComponent;
 class UInputMappingContext;
 class UInputAction;
+class UKrastovMaletaWidget;
+
 
 UCLASS(Abstract)
 class KRASTOVEXTRACTION_API AOperatorPlayerController
@@ -35,6 +37,13 @@ public:
   UFUNCTION(Exec) void KrastovRemove(int32 ItemIndex, bool bSafePocket);
   UFUNCTION(Exec) void KrastovClearInv();
   UFUNCTION(Exec) void KrastovDump();
+
+  UFUNCTION(BlueprintCallable, Category = "Krastov|UI")
+	void ToggleMaleta();
+
+	UFUNCTION(BlueprintPure, Category = "Krastov|UI")
+	bool IsMaletaOpen() const { return bMaletaOpen; }
+
 
   /** Console: KrastovSetLoad 30  (testa a penalidade de peso) */
   UFUNCTION(Exec)
@@ -67,6 +76,16 @@ protected:
   UPROPERTY(EditDefaultsOnly, Category = "Krastov|Input")
   TObjectPtr<UInputAction> CrouchAction;
 
+  	UPROPERTY(EditDefaultsOnly, Category = "Krastov|Input")
+	TObjectPtr<UInputAction> InventoryAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|Input")
+	TObjectPtr<UInputAction> RotateItemAction;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Krastov|UI")
+	TSubclassOf<UKrastovMaletaWidget> MaletaWidgetClass;
+
+
 private:
   void HandleMove(const FInputActionValue &Value);
   void HandleAimStick(const FInputActionValue &Value);
@@ -75,6 +94,12 @@ private:
   void HandleFlashlight();
   void AimAtCursor();
   void HandleCrouch();
+  void HandleRotateItem();
+
+	UPROPERTY(Transient)
+	TObjectPtr<UKrastovMaletaWidget> MaletaWidget;
+
+	bool bMaletaOpen = false;
 
   UKrastovItemDefinition *FindItemDef(FName ItemId) const;
   UInventoryGridComponent *GetGrid(bool bSafePocket) const;

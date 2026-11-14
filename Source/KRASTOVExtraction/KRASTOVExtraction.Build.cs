@@ -23,7 +23,8 @@ public class KRASTOVExtraction : ModuleRules
 			"Slate",
 			"GameplayAbilities",
 			"GameplayTags",
-			"GameplayTasks"
+			"GameplayTasks",
+			"SlateCore"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

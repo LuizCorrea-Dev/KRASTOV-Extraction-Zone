@@ -2523,3 +2523,83 @@ O campo Element só aparece quando Category = Artefato.
 O Item Id não pode ter espaços, porque é o nome usado nos comandos.
 Deixe Can Rotate marcado em todos.
 Abra o BP_OperatorPC, clique em Class Defaults e vá em Krastov | Debug > Debug Item Catalog. Clique no + oito vezes e escolha um Data Asset em cada posição.
+
+
+Onde salvar os ícones
+São dois lugares: um para os arquivos originais (PNG) e outro para os assets importados na Unreal.
+1. Arquivos originais (fora do Content)
+Guarde os PNGs em uma pasta na raiz do projeto, fora de Content:
+C:\Unreal Projects\KRASTOVExtraction 5.8\
+├── Content\
+├── Source\
+└── SourceArt\
+    └── Icons\
+        ├── Weapons\
+        ├── Artifacts\
+        ├── Medical\
+        └── Gear\
+Motivos:
+
+A pasta Content deve conter só arquivos .uasset criados pela Unreal. Um PNG solto ali não aparece no Content Browser.
+A Unreal guarda o caminho do arquivo original. Se você editar o PNG depois, basta clicar com o botão direito no asset e escolher Reimport.
+O .gitattributes já manda arquivos .png para o LFS. Assim, os originais ficam salvos no GitHub sem pesar no repositório.
+
+2. Assets importados (dentro da Unreal)
+No Content Browser, crie a mesma estrutura das pastas de itens:
+Content/Krastov/UI/Icons/
+├── Weapons/
+├── Artifacts/
+├── Medical/
+└── Gear/
+Nomes e tamanhos
+Nomes: use o prefixo T_Icon_ (o padrão da Unreal para texturas é T_), seguido do Item Id:
+
+      
+        
+        ItemArquivo
+        AK-74MT_Icon_AK74M.pngIsótopo ZariaT_Icon_Zaria.pngMáscara HO-17T_Icon_HO17.png
+        
+      
+    Tamanhos: a proporção da imagem deve ser igual ao formato do item na grade. Use 128 px por slot:
+
+      
+        
+        Formato na gradeTamanho da imagemExemplos
+        1x1128 x 128artefatos, pistola, kit médico2x1256 x 128máscara HO-173x1384 x 128AK-74M (desenhada na horizontal)
+        
+      
+    
+Use fundo transparente (PNG com alpha). A cor de fundo do slot (verde, roxo, azul ou cinza) é desenhada pela interface.
+Desenhe tudo na horizontal. Quando o jogador girar o item com R, a interface gira a imagem sozinha.
+
+Importar
+
+No Content Browser, abra a pasta de destino (por exemplo, Content/Krastov/UI/Icons/Weapons).
+No Explorer, selecione os PNGs correspondentes e arraste para o Content Browser.
+
+Configurar para interface (importante)
+Por padrão, a Unreal trata a textura como se fosse para um objeto 3D. Para ícones de interface, ajuste três campos. Dá para configurar todos de uma vez:
+
+No Content Browser, selecione todos os ícones importados. Use Ctrl+clique ou Ctrl+A dentro da pasta.
+Clique com o botão direito e escolha Asset Actions > Edit Selection in Property Matrix.
+Na janela que abrir, configure:
+
+      
+        
+        CampoValorMotivo
+        Compression SettingsUserInterface2D (RGBA)Mantém o alpha e as bordas nítidasTexture GroupUITrata a textura como interfaceMip Gen SettingsNoMipmapsÍcones sempre aparecem no mesmo tamanho, então não precisam de versões menores
+        
+      
+    
+Feche a janela e use File > Save All (Ctrl+Shift+S).
+
+Repita esses passos em cada pasta, ou selecione os ícones de todas as pastas com o filtro Texture do Content Browser.
+Ligar o ícone ao item
+Para cada Data Asset em Content/Krastov/Items/...:
+
+Dê duplo clique no asset (por exemplo, DA_AK74M).
+Na categoria Visual, em Icon, escolha o T_Icon_AK74M.
+Salve.
+
+
+
